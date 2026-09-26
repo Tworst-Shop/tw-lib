@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>tw-lib</title>
+<style>  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: transparent; }
+  html { font-size: clamp(12px, 1.2963vh, 22px); }
+  body { font-family: 'Segoe UI', Roboto, system-ui, sans-serif; color: #eef1f5; }
+  @font-face { font-family: Gilroy; font-weight: 600; src: url('job/font/Gilroy-SemiBold_0.ttf') format('truetype'); font-display: swap; }
+  @font-face { font-family: Gilroy; font-weight: 700; src: url('job/font/Gilroy-Bold_0.ttf') format('truetype'); font-display: swap; }
+  #prompt { --twp-u: min(1vw, 1.7778vh); --twp-color: #ffffff;
+    position: fixed; z-index: 82; display: flex; flex-direction: column; gap: calc(0.4 * var(--twp-u));
+    pointer-events: none; opacity: 0;
+    transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  #prompt.visible { opacity: 1; }
+  #prompt.right-center { top: 50%; right: calc(2.2 * var(--twp-u)); align-items: flex-end;
+    transform: translateY(-50%) translateX(calc(1 * var(--twp-u))); }
+  #prompt.right-center.visible { transform: translateY(-50%) translateX(0); }
+  #prompt.center-bottom { left: 50%; bottom: 12vh; align-items: center;
+    transform: translateX(-50%) translateY(calc(0.8 * var(--twp-u))); }
+  #prompt.center-bottom.visible { transform: translateX(-50%) translateY(0); }
+  .twp-card { display: flex; align-items: center;
+    padding: calc(0.4 * var(--twp-u)) calc(0.75 * var(--twp-u)) calc(0.4 * var(--twp-u)) calc(0.4 * var(--twp-u));
+    background: rgba(24, 24, 24, 0.94); border-radius: calc(0.5 * var(--twp-u)); }
+  .twp-key { flex: 0 0 auto; min-width: calc(1.55 * var(--twp-u)); height: calc(1.55 * var(--twp-u));
+    padding: 0 calc(0.32 * var(--twp-u)); display: flex; align-items: center; justify-content: center;
+    border-radius: calc(0.35 * var(--twp-u)); background: var(--twp-color); color: #14140f;
+    font-family: Gilroy, 'Segoe UI', sans-serif; font-weight: 700; font-size: calc(0.82 * var(--twp-u)); line-height: 1; }
+  .twp-label { max-width: 0; opacity: 0; margin-left: 0; overflow: hidden; white-space: nowrap; color: #fff;
+    font-family: Gilroy, 'Segoe UI', sans-serif; font-weight: 600; font-size: calc(0.78 * var(--twp-u));
+    transition: max-width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease,
+      margin-left 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  #prompt.expanded .twp-label { max-width: calc(14 * var(--twp-u)); opacity: 1; margin-left: calc(0.5 * var(--twp-u)); }
+</style>
+</head>
+<body>
+<div id="prompt"></div>
+<div id="twlib-app"></div>
+<script>
+  const promptEl = document.getElementById('prompt');
+
+  let expandTimer = null;
+
+  function showPrompt(cards, position, color) {
+    promptEl.className = position === 'center-bottom' ? 'center-bottom' : 'right-center';
+    promptEl.style.setProperty('--twp-color', color || '#ffffff');
+    promptEl.innerHTML = '';
+    (cards || []).forEach((card, i) => {
+      const row = document.createElement('div');
+      row.className = 'twp-card';
+      const key = document.createElement('span');
+      key.className = 'twp-key';
+      key.textContent = card.key || 'E';
+      const label = document.createElement('span');
+      label.className = 'twp-label';
+      label.style.transitionDelay = (i * 0.06) + 's';
+      label.textContent = card.text || '';
+      row.appendChild(key);
+      row.appendChild(label);
+      promptEl.appendChild(row);
+    });
+    clearTimeout(expandTimer);
+    requestAnimationFrame(() => promptEl.classList.add('visible'));
+    expandTimer = setTimeout(() => promptEl.classList.add('expanded'), 240);
+  }
+
+  function hidePrompt() {
+    clearTimeout(expandTimer);
+    promptEl.classList.remove('visible');
+    promptEl.classList.remove('expanded');
+  }
+
+  const MENU_ASSETS = [
+    'css/app.css', 'vendor/vue.global.prod.js', 'vendor/chart.umd.min.js', 'js/icons.js', 'js/core.js', 'js/charts.js',
+    'js/components.js', 'js/pages/overview.js', 'js/pages/jobs.js', 'js/pages/live.js', 'js/pages/players.js',
+    'js/pages/ledger.js', 'js/pages/settings.js', 'js/main.js',
+  ];
+  let menuReady = null;
+  function loadAsset(src) {
+    return new Promise((resolve, reject) => {
+      const css = src.endsWith('.css');
+      const node = document.createElement(css ? 'link' : 'script');
+      if (css) { node.rel = 'stylesheet'; node.href = src; } else { node.src = src; }
+      node.onload = resolve;
+      node.onerror = () => reject(new Error('tw-lib menu: could not load ' + src));
+      document.head.appendChild(node);
+    });
+  }
+  function loadMenu() {
+    if (!menuReady) {
+      const scripts = MENU_ASSETS.slice(0, -1).reduce((chain, src) => chain.then(() => loadAsset(src)), Promise.resolve());
+      menuReady = scripts
+        .then(() => Promise.all([document.fonts.load('500 12px Gilroy'), document.fonts.load('600 12px Gilroy'),
+          document.fonts.load('700 12px Gilroy')]).catch(() => {}))
+        .then(() => loadAsset(MENU_ASSETS[MENU_ASSETS.length - 1]));
+    }
+    return menuReady;
+  }
+  window.addEventListener('message', event => {
+    const data = event.data || {};
+    if (data.action === 'twlib:show') showPrompt(data.cards, data.position, data.color);
+    if (data.action === 'twlib:hide') hidePrompt();
+    if (data.action === 'twlib:menu') {
+      loadMenu().then(() => {
+        const store = Tw.store;
+        if (!store.open) { store.page = 'overview'; store.jobDetail = null; store.drawer = null; }
+        store.open = true;
+        Tw.api.receive(data.data);
+      }).catch(err => console.error(err.message));
+    }
+    if (data.action === 'twlib:menu:close' && window.Tw) Tw.store.open = false;
+  });
+  if (typeof GetParentResourceName !== 'function' && location.protocol !== 'nui:') {
+    loadAsset('js/mock.js').then(() => TwMock.boot()).catch(err => console.error(err.message));
+  }
+</script>
+</body>
+</html>
