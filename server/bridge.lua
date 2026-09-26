@@ -149,16 +149,36 @@ local tmc = {
     inventory = function(ctx) return ctx.player.PlayerData and ctx.player.PlayerData.items end,
 }
 
+local function packedProxy(iface)
+    return setmetatable({ legacy = true }, { __index = function(t, key)
+        local fcall = iface[key]
+        local packed = function(...) return fcall({ ... }) end
+        t[key] = packed
+        return packed
+    end })
+end
+
 local vrp = {
     core = function()
         load(LoadResourceFile('vrp', 'lib/utils.lua'))()
         local iface = module('vrp', 'lib/Proxy').getInterface('vRP')
-        return type(iface) == 'table' and iface or nil
+        if type(iface) ~= 'table' then return nil end
+        local proxy = LoadResourceFile('vrp', 'lib/Proxy.lua')
+        if not (proxy and proxy:find('function%s*%(%s*args%s*,%s*callback%s*%)')) then return iface end
+        print('^2[tw-lib]^7 vRP 0.x Proxy detected, packing proxy call arguments')
+        return packedProxy(iface)
     end,
     player = function(core, src) return core.getUserId(src) end,
     identifier = function(ctx) return ctx.player end,
     name = function(ctx)
-        local id = ctx.core.getUserIdentity(ctx.player)
+        local id
+        if rawget(ctx.core, 'legacy') then
+            local p = promise.new()
+            ctx.core.getUserIdentity(ctx.player, function(row) p:resolve(row or false) end)
+            id = Citizen.Await(p)
+        else
+            id = ctx.core.getUserIdentity(ctx.player)
+        end
         if not id then return GetPlayerName(ctx.src) end
         if id.nome then return id.nome .. ' ' .. (id.sobrenome or '') end
         if id.firstname then return id.firstname .. ' ' .. (id.name or id.lastname or '') end
