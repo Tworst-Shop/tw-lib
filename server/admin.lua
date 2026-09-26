@@ -4,22 +4,50 @@ TwLib.Admin = Admin
 
 local ACE = 'tw-lib.admin'
 local QB_PERMISSIONS = { 'qbcore.god', 'qbcore.admin', 'god', 'admin' }
+local ESX_GROUPS = { admin = true, superadmin = true }
 
-function Admin.isAllowed(src)
-    src = tonumber(src)
-    if src == 0 then return true end
-    if not src then return false end
-    if IsPlayerAceAllowed(src, ACE) then return true end
+local function settings()
+    return type(Config) == 'table' and type(Config.Admin) == 'table' and Config.Admin or {}
+end
 
+local function frameworkAdmin(src)
     local framework = TwLib.Detect.get('framework')
     if framework == 'qb' or framework == 'qbx' then
         for _, permission in ipairs(QB_PERMISSIONS) do
             if IsPlayerAceAllowed(src, permission) then return true end
         end
+    elseif framework == 'esx' then
+        local player = TwLib.Server and TwLib.Server.GetPlayer(src)
+        local ok, group = pcall(function() return player and player.getGroup() end)
+        return ok and ESX_GROUPS[group] == true
     end
+    return false
+end
 
-    print(('^3[tw-lib]^7 %s asked for the economy menu without permission (needs the %s ace).'):format(
-        tostring(GetPlayerName and GetPlayerName(src) or src), ACE))
+local function listed(src, list)
+    if type(list) ~= 'string' or list == '' then return false end
+    local mine = {}
+    for _, id in ipairs(GetPlayerIdentifiers(src) or {}) do mine[id] = true end
+    local own = TwLib.Server and TwLib.Server.GetIdentifier and TwLib.Server.GetIdentifier(src)
+    if own then mine[tostring(own)] = true end
+    for entry in list:gmatch('[^,%s]+') do
+        if mine[entry] then return true end
+    end
+    return false
+end
+
+function Admin.isAllowed(src)
+    src = tonumber(src)
+    if src == 0 then return true end
+    if not src then return false end
+    local cfg = settings()
+    local ace = type(cfg.ace) == 'string' and cfg.ace ~= '' and cfg.ace or ACE
+    if IsPlayerAceAllowed(src, ace) then return true end
+    if cfg.frameworkAdmins ~= false and frameworkAdmin(src) then return true end
+    if listed(src, cfg.identifiers) then return true end
+
+    print(('^3[tw-lib]^7 %s asked for the economy menu without permission (needs the %s ace or a line in tw-lib/config.lua).'):format(
+        tostring(GetPlayerName and GetPlayerName(src) or src), ace))
     return false
 end
 
@@ -30,9 +58,11 @@ local RANGES = { today = true, ['7d'] = true, ['30d'] = true, all = true }
 local function localeCode()
     local store = TwLib.Store
     local code = store and store.get and store.get('tw-lib', { 'locale' })
+    if type(code) ~= 'string' and type(Config) == 'table' then code = Config.Locale end
     if type(code) == 'string' and TwLib.Locales and TwLib.Locales[code] then return code end
     return 'en'
 end
+TwLib.LibLocale = localeCode
 
 local function text(key, vars)
     local strings = TwLib.Locales and TwLib.Locales[localeCode()]

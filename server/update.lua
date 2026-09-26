@@ -89,7 +89,7 @@ function Update.check()
             end
             waiting = waiting - 1
             if waiting > 0 then return end
-            local lang = TwLib.Store and TwLib.Store.get and TwLib.Store.get(LIB, { 'locale' }) or 'en'
+            local lang = TwLib.LibLocale and TwLib.LibLocale() or 'en'
             for _, line in ipairs(Update.lines(latest, installed, lang)) do print(line) end
         end, 'GET')
     end

@@ -39,7 +39,7 @@ local function rowsFor(res, forClient)
     local out = {}
     for _, row in ipairs(Store.overrides(res)) do
         local root = row.path[1]
-        if root ~= '_meta' and not (forClient and root == 'Server') then out[#out + 1] = row end
+        if root ~= '_meta' and not (forClient and (root == 'Server' or (res == LIB and root == 'Config'))) then out[#out + 1] = row end
     end
     return out
 end
@@ -47,11 +47,18 @@ end
 local function publish(res, fileOnly)
     if not fileOnly then
         GlobalState['twlib:' .. res] = rowsFor(res, true)
-        GlobalState['twlib:manual'] = Store.overrides(LIB)
+        GlobalState['twlib:manual'] = rowsFor(LIB, true)
     end
     if loaded then call('ConfigFile', 'sync', res, rowsFor(res, false)) end
 end
 TwLib.Publish = publish
+
+local function applyLibConfig()
+    if type(Config) ~= 'table' then return end
+    for _, row in ipairs(Store.overrides(LIB)) do
+        if row.path[1] == 'Config' then Merge.set({ Config = Config }, row.path, row.value) end
+    end
+end
 
 function TwLib.JobResources()
     local out = {}
@@ -243,7 +250,12 @@ CreateThread(function()
     end
     Detect.clear()
     call('Schema', 'ensure')
-    GlobalState['twlib:manual'] = Store.overrides(LIB)
+    if loaded then
+        captureEdits(LIB)
+        applyLibConfig()
+        publish(LIB, true)
+    end
+    GlobalState['twlib:manual'] = rowsFor(LIB, true)
     releaseHeld()
     restartEarly()
     resumeStoppedJobs()
@@ -292,6 +304,10 @@ RegisterCommand('twlib', function(src, args)
         captureEdits(res)
         Store.set(res, dotPath(pathArg), Merge.decode(value))
         publish(res, true)
+        if res == LIB then
+            applyLibConfig()
+            GlobalState['twlib:manual'] = rowsFor(LIB, true)
+        end
         print(('[tw-lib] %s %s = %s  (restart %s to apply)'):format(res, pathArg, raw, res))
         return
     end

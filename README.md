@@ -30,6 +30,23 @@ Replace the `tw-lib` folder with the new one. Your job settings live in the data
 never resets your economy, language or settings. On start tw-lib checks tworst.com and tells the console when tw-lib or a
 job has an update.
 
+## Settings (`tw-lib/config.lua`)
+
+```lua
+Config.Locale = 'en' -- /twlib menu language: en, tr, de, fr, es, pt, ru, nl, sv, hu, ro, ja, ar
+
+Config.Admin = {
+    ace = 'tw-lib.admin',   -- players with this ACE open /twlib
+    frameworkAdmins = true, -- QBCore / QBox admins (god, admin) and ESX admins (admin, superadmin) open it too
+    identifiers = '',       -- anyone else, comma separated: 'license:..., discord:..., fivem:..., steam:..., ABC12345'
+}
+```
+
+Who may open the `/twlib` admin menu: players with the ACE (`add_ace group.admin tw-lib.admin allow` in `server.cfg`),
+framework admins, or anyone listed in `identifiers` (a license, Discord, FiveM or Steam id, or a citizenid).
+Edit the file and restart tw-lib. Your values are saved in the database, so a tw-lib update keeps them. You can also set
+them from the server console, e.g. `twlib set tw-lib Config.Admin.identifiers "license:abc, discord:123"`.
+
 ## Supported scripts
 
 | | |

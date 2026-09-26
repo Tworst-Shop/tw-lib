@@ -7,6 +7,8 @@ author 'tworst-script'
 description 'Tworst shared library: framework bridges and customer settings that survive updates'
 version '1.0.0'
 
+tw_lib_config 'config.lua'
+
 dependency 'oxmysql'
 
 shared_scripts {
@@ -17,6 +19,7 @@ shared_scripts {
 }
 
 server_scripts {
+    'config.lua',
     '@oxmysql/lib/MySQL.lua',
     'server/store.lua',
     'server/schema.lua',
@@ -58,6 +61,7 @@ files {
 
 escrow_ignore {
 	'client/*.lua',
+	'config.lua',
 	'init.lua',
 	'job/client/*.lua',
 	'job/server/*.lua',

@@ -21,7 +21,9 @@
     return text;
   }
 
-  const lang = () => (store.locale === 'tr' ? 'tr-TR' : 'en-US');
+  const LANG = { tr: 'tr-TR', de: 'de-DE', fr: 'fr-FR', es: 'es-ES', pt: 'pt-BR', ru: 'ru-RU', nl: 'nl-NL', sv: 'sv-SE',
+    hu: 'hu-HU', ro: 'ro-RO', ja: 'ja-JP' };
+  const lang = () => LANG[store.locale] || 'en-US';
   const num = n => new Intl.NumberFormat(lang()).format(Math.round(Number(n) || 0));
   const short = n => new Intl.NumberFormat(lang(), { notation: 'compact', maximumFractionDigits: 1 }).format(Number(n) || 0);
   const withCurrency = text => (store.locale === 'tr' ? text + ' ' + store.currency : store.currency + text);
