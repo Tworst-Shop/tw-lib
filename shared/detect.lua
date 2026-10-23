@@ -86,9 +86,24 @@ D.lists = {
         { resource = 'qb-clothing', id = 'qb-clothing' },
         { resource = 'esx_skin', id = 'esx_skin' },
     },
+    notify = {
+        { resource = 'codem-supreme-notification', id = 'codem-supreme-notification' },
+        { resource = 'codem-notification', id = 'codem-notification' },
+        { resource = 'okokNotify', id = 'okokNotify' },
+        { resource = 'brutal_notify', id = 'brutal_notify' },
+        { resource = 'g-notifications', id = 'g-notifications' },
+        { resource = 'is_ui', id = 'is_ui' },
+        { resource = 'lation_ui', id = 'lation_ui' },
+        { resource = 'vms_notifyv2', id = 'vms_notifyv2' },
+        { resource = 'wasabi_uikit', id = 'wasabi_uikit' },
+        { resource = 'mythic_notify', id = 'mythic_notify' },
+        { resource = '17mov_Hud', id = '17mov_Hud' },
+        { resource = 'gs-notify', id = 'gs-notify' },
+        { resource = 'ox_lib', id = 'ox_lib' },
+    },
 }
 
-D.fallback = { framework = 'standalone', inventory = 'framework', keys = 'none', fuel = 'native', clothing = 'none' }
+D.fallback = { framework = 'standalone', inventory = 'framework', keys = 'none', fuel = 'native', clothing = 'none', notify = 'own' }
 
 D.probes = {
     tmc = function()

@@ -156,9 +156,33 @@ local clothing = {
     rcore_clothing = function() TriggerServerEvent('rcore_clothing:reloadSkin') end,
     ['qb-clothing'] = function()
         TriggerEvent('qb-clothing:reloadSkin')
-        ExecuteCommand('refreshskin')
+        TriggerServerEvent('qb-clothes:loadPlayerSkin')
+        TriggerServerEvent('qb-clothing:loadPlayerSkin')
     end,
 }
+
+local function inform(t) return t == 'info' and 'inform' or t end
+
+local notify = {
+    ['codem-supreme-notification'] = function(m, t, d) exports['codem-supreme-notification']:SendNotification(t, m, d) end,
+    ['codem-notification'] = function(m, t, d) TriggerEvent('codem-notification:Create', m, t, nil, d) end,
+    okokNotify = function(m, t, d) exports['okokNotify']:Alert('', m, d, t, false) end,
+    brutal_notify = function(m, t, d) exports['brutal_notify']:SendAlert('Notification', m, d, t) end,
+    ['g-notifications'] = function(m, t) exports['g-notifications']:Notify({ title = 'Notification', description = m, type = t }) end,
+    is_ui = function(m, t, d) exports['is_ui']:Notify(m, nil, d, t) end,
+    lation_ui = function(m, t) exports.lation_ui:notify({ message = m, type = inform(t) }) end,
+    vms_notifyv2 = function(m) exports['vms_notifyv2']:Notification({ description = m }) end,
+    wasabi_uikit = function(m, t) exports.wasabi_uikit:Notify({ title = m, type = t }) end,
+    mythic_notify = function(m, t) exports['mythic_notify']:DoHudText(inform(t), m) end,
+    ['17mov_Hud'] = function(m, t) exports['17mov_Hud']:ShowNotification(m, t) end,
+    ['gs-notify'] = function(m, t, d) exports['gs-notify']:Notify(nil, { type = t, message = m, duration = d }) end,
+    ox_lib = function(m, t, d) exports.ox_lib:notify({ title = m, type = inform(t), duration = d }) end,
+    qbx = function(m, t, d) exports.qbx_core:Notify(m, t, d) end,
+    qb = function(m, t, d) TriggerEvent('QBCore:Notify', m, t == 'info' and 'primary' or t, d) end,
+    esx = function(m) TriggerEvent('esx:showNotification', m) end,
+}
+local notifyKinds = { err = 'error', error = 'error', success = 'success', warn = 'warning', warning = 'warning' }
+local notifyWarned = {}
 
 local function safe(kind, fn, ...)
     local ok, err = pcall(fn, ...)
@@ -191,6 +215,25 @@ function Client.SetVehicleFuel(vehicle, level)
     local id = Detect.get('fuel')
     local fn = id == 'custom' and Client.custom.fuel.impl.set or fuel[id] or fuel.native
     safe('fuel', fn, vehicle, level)
+end
+
+function Client.Notify(text, kind, ms, choice)
+    local id = choice or 'own'
+    if id == 'auto' then
+        id = Detect.get('notify')
+        if id == 'own' then id = Detect.get('framework') end
+    end
+    local fn = id == 'custom' and Client.custom.notify and Client.custom.notify.impl.show or notify[id]
+    if not fn then
+        if id ~= 'own' and choice ~= 'auto' and not notifyWarned[id] then
+            notifyWarned[id] = true
+            print(('^3[tw-lib]^7 notify = %s is not a known choice, the job shows its own notification'):format(tostring(id)))
+        end
+        return false
+    end
+    local ok, err = pcall(fn, text, notifyKinds[kind] or 'info', tonumber(ms) or 5000)
+    if not ok then print(('^1[tw-lib]^7 notify script call failed: %s'):format(tostring(err))) end
+    return ok
 end
 
 function Client.RefreshSkin()
@@ -278,8 +321,8 @@ CreateThread(function()
 end)
 
 function Client.RegisterBridge(kind, impl)
-    if kind ~= 'keys' and kind ~= 'fuel' and kind ~= 'clothing' then
-        error('tw-lib: client RegisterBridge supports keys, fuel, clothing')
+    if kind ~= 'keys' and kind ~= 'fuel' and kind ~= 'clothing' and kind ~= 'notify' then
+        error('tw-lib: client RegisterBridge supports keys, fuel, clothing, notify')
     end
     Client.custom[kind] = { impl = impl, owner = GetInvokingResource() }
     Detect.custom[kind] = true
@@ -307,6 +350,6 @@ AddEventHandler('onClientResourceStop', function(res)
     end
 end)
 
-for _, name in ipairs({ 'GiveVehicleKey', 'RemoveVehicleKey', 'SetVehicleFuel', 'RefreshSkin', 'GetPlayerJob', 'IsPlayerLoaded', 'RegisterBridge' }) do
+for _, name in ipairs({ 'GiveVehicleKey', 'RemoveVehicleKey', 'SetVehicleFuel', 'RefreshSkin', 'Notify', 'GetPlayerJob', 'IsPlayerLoaded', 'RegisterBridge' }) do
     exports(name, Client[name])
 end

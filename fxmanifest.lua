@@ -5,7 +5,7 @@ lua54 'yes'
 name 'tw-lib'
 author 'tworst-script'
 description 'Tworst shared library: framework bridges and customer settings that survive updates'
-version '1.0.0'
+version '1.1.0'
 
 tw_lib_config 'config.lua'
 
@@ -36,6 +36,7 @@ server_scripts {
 client_scripts {
     'client/bridge.lua',
     'client/interaction.lua',
+    'client/interact_txd.lua',  -- 3D etkilesim dokulari (twlib_interact)
     'client/admin.lua',
 }
 
@@ -45,6 +46,9 @@ files {
     'init.lua',
     'shared/merge.lua',
     'job/client/*.lua',
+    'interact/client/*.lua',    -- 3D etkilesim: is kaynaklari @tw-lib/interact ile yukler (ox_lib require)
+    'interact/shared/*.lua',
+    'interact/assets/prompt/*.png',
     'html/index.html',
     'html/css/*.css',
     'html/js/*.js',
@@ -63,6 +67,8 @@ escrow_ignore {
 	'client/*.lua',
 	'config.lua',
 	'init.lua',
+	'interact/client/*.lua',
+	'interact/shared/*.lua',
 	'job/client/*.lua',
 	'job/server/*.lua',
 	'locales/*.lua',

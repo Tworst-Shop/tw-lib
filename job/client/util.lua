@@ -118,10 +118,9 @@ function ChangeClothes(key, value, texture)
 end
 
 function RefreshSkin()
-    Config.RefreshSkin()
     local ped, outfit = PlayerPedId(), wornOutfit
     wornOutfit = nil
-    if not outfit or GetEntityModel(ped) ~= outfit.model then return end
+    if not outfit or GetEntityModel(ped) ~= outfit.model then return Config.RefreshSkin() end
     for id, c in pairs(outfit.components) do SetPedComponentVariation(ped, id, c[1], c[2], c[3]) end
     for id, p in pairs(outfit.props) do
         if p[1] < 0 then ClearPedProp(ped, id) else SetPedPropIndex(ped, id, p[1], p[2], true) end

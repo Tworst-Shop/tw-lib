@@ -84,7 +84,7 @@ if type(Config) == 'table' then
     local ts = Config.TargetSystem
     if type(ts) == 'table' and (ts.resource == nil or ts.resource == 'default') then
         local own = Config.InteractionHandler
-        local pick = (own == 'drawtext' or own == 'ox-target' or own == 'qb-target') and own or interaction('default')
+        local pick = (own == 'drawtext' or own == 'ox-target' or own == 'qb-target' or own == 'interact') and own or interaction('default')
         ts.resource = pick == 'ox-target' and 'ox_target' or pick
     end
 end

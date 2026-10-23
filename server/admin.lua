@@ -184,6 +184,7 @@ local RANGE = {
     MaxPlayersInLobby = { 1, 4, true },
     regionMinimumLevel = { 0, math.huge, true },
     onlineJobExtraAwards = { -math.huge, math.huge },
+    refund = { 0, 1 },
 }
 
 local CHOICES = {
@@ -232,7 +233,16 @@ local function valueAt(root, path)
     return node
 end
 
-local function collect(node, path, out, saved, group)
+local function optIn(res, path)
+    local text = TwLib.Merge.pathKey(path)
+    for i = 0, (GetNumResourceMetadata(res, 'tw_lib_editable') or 0) - 1 do
+        local p = 'Config.' .. GetResourceMetadata(res, 'tw_lib_editable', i)
+        if text == p or text:sub(1, #p + 1) == p .. '.' then return true end
+    end
+    return false
+end
+
+local function collect(res, node, path, out, saved, group)
     for key, value in pairs(node) do
         local kind = TwLib.Merge.typeOf(value)
         local here = { table.unpack(path) }
@@ -244,13 +254,13 @@ local function collect(node, path, out, saved, group)
                 for index, entry in ipairs(value) do
                     local entryPath = { table.unpack(here) }
                     entryPath[#entryPath + 1] = index
-                    collect(entry, entryPath, out, saved,
+                    collect(res, entry, entryPath, out, saved,
                         { key = tostring(key), index = index, name = entryName(entry, index) })
                 end
             else
-                collect(value, here, out, saved, group)
+                collect(res, value, here, out, saved, group)
             end
-        elseif ((kind == 'number' or kind == 'boolean') and EDITABLE[key]) or (kind == 'string' and CHOICES[key] and not group) then
+        elseif ((kind == 'number' or kind == 'boolean') and (EDITABLE[key] or optIn(res, here))) or (kind == 'string' and CHOICES[key] and not group) then
             local pathKey = TwLib.Merge.pathKey(here)
             out[#out + 1] = {
                 path = pathKey,
@@ -259,7 +269,7 @@ local function collect(node, path, out, saved, group)
                 groupKey = group and group.key or nil,
                 groupIndex = group and group.index or 0,
                 entryName = group and group.name or nil,
-                order = EDITABLE[key] or CHOICES[key].order,
+                order = EDITABLE[key] or (CHOICES[key] and CHOICES[key].order) or 100,
                 value = value,
                 type = kind == 'string' and 'choice' or kind,
                 options = kind == 'string' and CHOICES[key].options or nil,
@@ -291,7 +301,7 @@ function Admin.settings(res)
 
     local merged = TwLib.Merge.apply({ Config = defaults.Config }, rows)
     local out = {}
-    collect(merged.Config, { 'Config' }, out, saved, nil)
+    collect(res, merged.Config, { 'Config' }, out, saved, nil)
     for _, field in ipairs(out) do
         field.default = valueAt({ Config = defaults.Config }, splitPath(field.path))
         if field.options and not listed(field.options, field.default) then
@@ -340,7 +350,7 @@ function Admin.saveSetting(res, pathText, value)
     local path = splitPath(pathText)
     if path[1] ~= 'Config' then return 'missing' end
     local key = path[#path]
-    if not EDITABLE[key] and not (CHOICES[key] and #path == 2) then return 'not-editable' end
+    if not EDITABLE[key] and not optIn(res, path) and not (CHOICES[key] and #path == 2) then return 'not-editable' end
     if CHOICES[key] and not listed(CHOICES[key].options, value) and value ~= valueAt(defaults, path) then return 'choice' end
     local range = RANGE[key] or { 0, math.huge }
     if type(value) == 'number' and (value ~= value or value < range[1] or value > range[2] or (range[3] and value % 1 ~= 0)) then
@@ -379,7 +389,7 @@ RegisterNetEvent('tw-lib:server:setting', function(request)
             TwLib.Store.remove(LIB, path)
             saved = saved + 1
             print(('^2[tw-lib]^7 settings: %s reset %s for every job'):format(GetPlayerName(src) or src, pathText))
-        elseif path[1] == 'Config' and (EDITABLE[path[#path]] or (CHOICES[path[#path]] and #path == 2)) then
+        elseif path[1] == 'Config' and (EDITABLE[path[#path]] or optIn(res, path) or (CHOICES[path[#path]] and #path == 2)) then
             TwLib.Store.remove(res, path)
             saved = saved + 1
             print(('^2[tw-lib]^7 settings: %s reset %s %s to the default'):format(GetPlayerName(src) or src, res, pathText))
