@@ -144,6 +144,11 @@ local function answer(request)
         local res = request.resource
         data.resource = (type(res) == 'string' and res ~= '' and res) or jobs[1]
         data.settings = data.resource and Admin.settings(data.resource) or {}
+        if data.resource and data.resource ~= LIB then
+            local ok, tools = pcall(function() return exports[data.resource]:TwLibTools() end)
+            data.tools = ok and type(tools) == 'table' and tools or nil
+        end
+        if data.resource == LIB and TwLib.Telemetry then data.telemetry = TwLib.Telemetry.preview() end
         data.lobbies = 0
         for _, l in ipairs(live.lobbies) do
             if l.job == data.resource or data.resource == LIB then data.lobbies = data.lobbies + 1 end
@@ -194,8 +199,9 @@ local CHOICES = {
 local LIB_SETTINGS = {
     interaction = { options = { 'drawtext', 'ox-target', 'qb-target', 'auto' }, default = 'drawtext' },
     reconnect = { options = { '0', '60', '180', '300', '600' }, default = '180' },
+    telemetry = { options = { 'on', 'off' }, default = 'on' },
 }
-local LIB_ORDER = { 'interaction', 'reconnect' }
+local LIB_ORDER = { 'interaction', 'reconnect', 'telemetry' }
 
 local function listed(options, value)
     for _, option in ipairs(options) do
@@ -400,10 +406,10 @@ RegisterNetEvent('tw-lib:server:setting', function(request)
     local data = answer({ tab = 'economy', resource = res })
     local liveOnly = res == LIB
     for _, change in ipairs(type(request.changes) == 'table' and request.changes or {}) do
-        if change.path ~= 'reconnect' then liveOnly = false end
+        if change.path ~= 'reconnect' and change.path ~= 'telemetry' then liveOnly = false end
     end
     for _, pathText in ipairs(type(request.resets) == 'table' and request.resets or {}) do
-        if pathText ~= 'reconnect' then liveOnly = false end
+        if pathText ~= 'reconnect' and pathText ~= 'telemetry' then liveOnly = false end
     end
     data.saved, data.errors, data.restartNeeded = saved, errors, saved > 0 and not liveOnly
     TriggerClientEvent('tw-lib:client:menu', src, data)
@@ -442,6 +448,12 @@ local ACTIONS = {
 
     endJob = function(src, res, request) return 'lobby', 'finish', 'jobEnded' end,
     closeLobby = function(src, res, request) return 'lobby', 'close', 'lobbyClosed' end,
+
+    tool = function(src, res, request)
+        local ok, done, message = pcall(function() return exports[res]:TwLibTool(tostring(request.tool or '')) end)
+        if not ok or done == nil then return 'economy', text('unsupported'), true end
+        return 'economy', tostring(message or text(done and 'saved' or 'failed')), done == false
+    end,
 }
 
 RegisterNetEvent('tw-lib:server:action', function(request)
@@ -467,7 +479,7 @@ RegisterNetEvent('tw-lib:server:action', function(request)
     print(('^3[tw-lib]^7 menu action: %s -> %s %s %s (%s)'):format(GetPlayerName(src) or src, tostring(request.action), res,
         tostring(request.lobby or ''), failed and 'failed' or 'ok'))
 
-    local data = answer({ tab = tab or 'live' })
+    local data = answer({ tab = tab or 'live', resource = res })
     data.toast = { text = message, error = failed == true }
     TriggerClientEvent('tw-lib:client:menu', src, data)
 end)

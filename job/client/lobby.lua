@@ -102,6 +102,10 @@ function LobbyEvents.RefreshLobby(lobbyData)
         if not openUI and CreateCamera then CreateCamera() end
         SetNuiFocus(true, true)
         NuiMessage('OPEN_MENU', playerData)
+        if playerData.locale ~= Config.Locale and Locales[playerData.locale] then
+            Config.Locale = playerData.locale
+            NuiMessage('UPDATE_LOCALES', Locales[Config.Locale])
+        end
         NuiMessage('LOAD_LOBBY', CoopDataClient.players)
         NuiMessage('REFRESH_LOBBY', CoopDataClient.roomSetting.Mission)
         openUI = true

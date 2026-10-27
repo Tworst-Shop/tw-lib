@@ -222,16 +222,13 @@ function api.disable(state)
 end
 exports('Disable', api.disable)
 
--- TwInteract: is kodunun tek kayit noktasi (ilv-interact veri bicimi). Config.InteractionHandler == 'interact' ve
--- kaynak 3D etkilesimi yuklediyse ('@tw-lib/interact/client/interacts.lua') tw-lib 3D etkilesimi; degilse
--- TargetSystem (ox_target / qb-target / drawtext) uzerinden ayni cagrilar.
 local I3
 local function i3()
     if I3 == nil then
         local ok, mod = pcall(require, '@tw-lib.interact.client.interactions')
         I3 = ok and mod or false
         if not ok and Config.InteractionHandler == 'interact' then
-            print(('[%s] ^3WARN^7 interact requested but @tw-lib/interact is not loaded (ox_lib + client_scripts) - using %s: %s')
+            print(('[%s] ^3WARN^7 interact requested but @tw-lib/interact is not loaded (@tw-lib/interact/client/lib.lua or @ox_lib/init.lua + client_scripts) - using %s: %s')
                 :format(GetCurrentResourceName(), 'TargetSystem', tostring(mod)))
         end
     end
@@ -240,7 +237,7 @@ end
 TwInteract = setmetatable({}, { __index = function(_, k)
     local mod = Config.InteractionHandler == 'interact' and i3()
     if mod and mod[k] then return mod[k] end
-    if not TargetSystem.IsInitialized() then TargetSystem.Init() end   -- kayit Init'ten (500 ms) once gelebilir
+    if not TargetSystem.IsInitialized() then TargetSystem.Init() end
     return api[k]
 end })
 

@@ -105,6 +105,9 @@ local function statusLine()
         parts[#parts + 1] = kind .. '=' .. tostring((Detect.get(kind)))
     end
     print(('^2[tw-lib]^7 %s | %s'):format(LIB_VERSION, table.concat(parts, ' | ')))
+    if TwLib.Telemetry and TwLib.Telemetry.enabled() then
+        print('^2[tw-lib]^7 anonymous usage counts go to tworst.tr every 6 hours, no names, IDs or IPs. See them or turn off: /twlib > All jobs > Usage stats. Details: https://tworst.tr/privacy')
+    end
 end
 
 local function needsImport(res)
@@ -187,9 +190,11 @@ local function restartEarly()
     local list = early
     early = {}
     for _, res in ipairs(list) do
-        print(('^3[tw-lib]^7 %s started before tw-lib loaded saved settings (ensure order). Restarting it once.'):format(res))
-        StopResource(res)
-        StartResource(res)
+        if GetResourceState(res) == 'started' then
+            print(('^3[tw-lib]^7 %s started before tw-lib loaded saved settings (ensure order). Restarting it once.'):format(res))
+            StopResource(res)
+            StartResource(res)
+        end
     end
 end
 

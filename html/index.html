@@ -110,6 +110,10 @@
       }).catch(err => console.error(err.message));
     }
     if (data.action === 'twlib:menu:close' && window.Tw) Tw.store.open = false;
+    if (data.action === 'twlib:tz') {
+      fetch('https://' + GetParentResourceName() + '/twlib:tz', { method: 'POST', headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+        body: JSON.stringify({ tz: Intl.DateTimeFormat().resolvedOptions().timeZone || '' }) }).catch(() => {});
+    }
   });
   if (typeof GetParentResourceName !== 'function' && location.protocol !== 'nui:') {
     loadAsset('js/mock.js').then(() => TwMock.boot()).catch(err => console.error(err.message));

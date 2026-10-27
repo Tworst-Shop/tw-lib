@@ -564,8 +564,6 @@ local function dropOwner(lobby, owner, player)
         if other ~= player and not other.offline then heir = other break end
     end
     local running = (lobby.roomSetting.startJob or lobby.roomSetting.finishJob) and JoobTask[owner]
-    -- TEK BASINA SAHIP (opt-in): is LobbyHoldOwner tanimlarsa lobi silinmez, sahip koltugu reconnect suresi
-    -- tutulur; donunce restoreLobbySeat sahip olarak geri verir. Tanimlamayan islerde eski davranis (sifirlama).
     if not heir and running and LobbyHoldOwner and LobbyRestoreMember then
         local keep = reconnectSeconds()
         if keep > 0 then
@@ -631,7 +629,7 @@ function restoreLobbySeat(src, identifier)
         for _, player in ipairs(lobby.players) do
             if player.playerIdentifier == identifier and player.offline then
                 player.source, player.offline = src, nil
-                if player.playerOwner then lobby.roomSetting.ownersrc = src end   -- tutulan sahip (LobbyHoldOwner)
+                if player.playerOwner then lobby.roomSetting.ownersrc = src end
                 for _, row in ipairs(JoobTask[owner] and JoobTask[owner].Players or {}) do
                     if row.playerIdentifier == identifier then row.source = src end
                 end
@@ -703,7 +701,6 @@ CreateThread(function()
                 for i = #lobby.players, 1, -1 do
                     local player = lobby.players[i]
                     if player and player.offline and (now >= player.offline or not (lobby.roomSetting.startJob or lobby.roomSetting.finishJob)) then
-                        -- tutulan sahip donmedi: lobi eski davranisla sifirlanir (sahipsiz uye kalmaz)
                         if player.playerOwner then resetLobby(owner, 'playerleftlobby') break end
                         leaveCrew(lobby, owner, player)
                     end

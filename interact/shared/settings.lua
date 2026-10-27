@@ -50,57 +50,50 @@ local BackEngineVehicles = {
     end
 
 return {
-    Debug = GetConvar('debug', 'false') == 'true' and true or false, -- Enable / Disable debug mode
-    -- Runtime TXD 'twlib_interact' (tw-lib/client/interact_txd.lua yaratir, bu kaynak cizer). Dosyalar assets/prompt.
+    Debug = GetConvar('debug', 'false') == 'true' and true or false,
     Textures = {
-        point = 'point',          -- etkilesim noktasi: kucuk dolu beyaz nokta (halka yok)
-        key = 'key',              -- yuvarlatilmis kare tus rozeti
-        cap = 'cap',              -- secili satir kapsulunun yuvarlak koseli ucu (sag uc 180 derece dondurulur)
-        px = 'px',                -- duz blok: kapsul ortasi
-        crosshair = 'crosshair',  -- ekran ortasi: kucuk elmas
-        font = 'font',            -- Gilroy SemiBold atlasi (tools/interact_font.py)
+        point = 'point',
+        key = 'key',
+        cap = 'cap',
+        px = 'px',
+        crosshair = 'crosshair',
+        font = 'font',
     },
-    -- TWORST GORUNUMU (Yusuf 2026-10-06, secenek B): secili satir BEYAZ kapsul icinde koyu tus rozeti + koyu yazi;
-    -- digerleri zeminsiz, kucuk beyaz yazi, koyu kenar (her zeminde okunur). Gilroy, normal yazim. Mantik / tuslar
-    -- ilv-interact ile ayni. Boyutlar ekran yuksekliginin kesri (1080p px / 1080).
     Prompt = {
-        key = 'E',                -- rozetteki harf (kontrol INPUT_PICKUP / 38)
-        uppercase = false,        -- true: Turkce harfler de buyur (utils.lua upper)
-        accent = { 255, 255, 255, 255 },     -- nokta rengi
-        textHeight = 0.0120,      -- secili etiket buyuk harf yuksekligi (~13 px)
-        otherScale = 0.86,        -- secili olmayan satirlarin yazi olcegi
-        keySize = 0.0185,         -- tus rozeti (~20 px)
+        key = 'E',
+        uppercase = false,
+        accent = { 255, 255, 255, 255 },
+        textHeight = 0.0120,
+        otherScale = 0.86,
+        keySize = 0.0185,
         keyTextHeight = 0.0090,
-        keyGap = 0.0070,          -- rozet ile etiket arasi
-        pillPad = 0.0028,         -- kapsul ic boslugu, dikey (rozetin cevresi)
-        pillPadRight = 0.0055,    -- yazidan sonra sag bosluk
-        pillRadius = 0.25,        -- kapsul kose yaricapi / kapsul yuksekligi (0.5 = tam yuvarlak)
-        pillColor = { 255, 255, 255, 240 },  -- secili satir kapsulu
-        keyColor = { 20, 22, 26, 255 },      -- rozet
+        keyGap = 0.0070,
+        pillPad = 0.0028,
+        pillPadRight = 0.0055,
+        pillRadius = 0.25,
+        pillColor = { 255, 255, 255, 240 },
+        keyColor = { 20, 22, 26, 255 },
         keyTextColor = { 255, 255, 255, 255 },
-        selTextColor = { 20, 22, 26, 255 },  -- secili etiket (beyaz kapsul ustunde)
-        textColor = { 255, 255, 255, 255 },  -- diger etiketler
-        dimmedAlpha = 230,        -- diger etiketlerin opakligi
-        outlineAlpha = 150,       -- diger etiketlerin koyu kenari (4 yon, 1 px); 0 = yok
-        dotSize = 0.0105,         -- nokta (~11 px)
+        selTextColor = { 20, 22, 26, 255 },
+        textColor = { 255, 255, 255, 255 },
+        dimmedAlpha = 230,
+        outlineAlpha = 150,
+        dotSize = 0.0105,
         crosshairSize = 0.0060,
         crosshair = true,
-        hoverRadius = 0.06,       -- nokta secimi icin ekran ortasina yakinlik
+        hoverRadius = 0.06,
         rowSpacing = 0.0245,
     },
     Disable = {
-        onDeath = true, -- Disable interactions on death
-        onNuiFocus = true, -- Disable interactions while NUI is focused
-        onVehicle = true, -- Disable interactions while in a vehicle
-        onHandCuff = true, -- Disable interactions while handcuffed
+        onDeath = true,
+        onNuiFocus = true,
+        onVehicle = true,
+        onHandCuff = true,
     },
 
-    -- Nearby object distance check.
-    nearbyObjectDistance = 20.0, -- Keep it at 15.0 at minimum.
+    nearbyObjectDistance = 20.0,
     nearbyVehicleDistance = 4.0,
 
-    -- KAPALI. Acikken yakindaki HER aracin bagajina "Trunk"
-    -- istemi ekliyordu (burger isiyle ilgisi yok, ayri interact kaynagiyla cakisir).
     vehicleBoneDefaults = {
         enabled = false,
         bones = {

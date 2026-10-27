@@ -35,7 +35,6 @@ end
 local function _resolveType()
     local preference, fallback = _preference()
     if not preference then return 'none' end
-    -- 'interact' (3D, TwInteract) TargetSystem'in disinda: buradan dogrudan kayit yapan kod drawtext'e duser
     if preference == 'drawtext' or preference == 'interact' then return 'drawtext' end
 
     if preference == 'ox_target' or preference == 'qb-target' then

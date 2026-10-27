@@ -1,13 +1,9 @@
--- tw-lib 3D ETKILESIM (ilv-interact / Iloveyou.scripts tabanli). Is kaynagi client_scripts'e
--- '@tw-lib/interact/client/interacts.lua' ekler; moduller '@tw-lib.interact.*', dokular tw-lib'in 'twlib_interact'
--- sozlugu (tw-lib/client/interact_txd.lua). Kayit API'si: TwInteract (tw-lib/job/client/interact.lua).
 local interactions = require '@tw-lib.interact.client.interactions'
 local utils = require '@tw-lib.interact.client.utils'
 local settings = require '@tw-lib.interact.shared.settings'
 local CURRENT_SELECTION = 1
 local CURRENT_OPTION = 0
 
--- CACHE
 local Wait = Wait
 local IsControlJustPressed = IsControlJustPressed
 local IsNuiFocused = IsNuiFocused
@@ -16,7 +12,6 @@ local IsPedCuffed = IsPedCuffed
 
 local visibleOptions = {}
 
--- Collects the options whose canInteract passes into visibleOptions and returns how many there are.
 local function getVisibleOptions(interaction)
     table.wipe(visibleOptions)
     local amount = 0
@@ -58,7 +53,6 @@ local function CreateInteractions()
     local bestDist = hoverRadius
     screenCount = 0
 
-    -- Pass 1: find every on-screen point and pick the in-range one closest to the crosshair.
     for i = 1, #nearby do
         local interaction = nearby[i]
         local coords = interaction.coords or utils.getCoordsFromInteract(interaction)
@@ -88,7 +82,6 @@ local function CreateInteractions()
         return
     end
 
-    -- Pass 2: dots for everything except the hovered point, which gets the prompt instead.
     for i = 1, screenCount do
         if i ~= activeIndex then
             utils.drawDot(screenCoords[i])
@@ -104,10 +97,8 @@ local function CreateInteractions()
         return
     end
 
-    -- Rebuild the option list for the hovered point (pass 1 overwrote it while scanning).
     getVisibleOptions(active)
 
-    -- Bone and model interactions have no id, so fall back to the entity.
     local key = active.id or active.entity
     if key ~= CURRENT_OPTION then
         CURRENT_OPTION = key
@@ -155,7 +146,6 @@ local function isDisabled()
     return false
 end
 
--- Fast thread
 CreateThread(function ()
     lib.requestStreamedTextureDict('twlib_interact')
     while true do
@@ -168,7 +158,6 @@ CreateThread(function ()
     end
 end)
 
--- Slow checker thread
 CreateThread(function()
     while true do
         nearby = interactions.getNearbyInteractions()

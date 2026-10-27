@@ -122,7 +122,15 @@
     if (res === 'tw-lib') {
       const row = { path: 'interaction', key: 'interaction', group: '', groupIndex: 0, order: 0, type: 'choice', default: 'drawtext',
         options: ['drawtext', 'ox-target', 'qb-target', 'auto'] };
-      return { resource: res, settings: [Object.assign(row, { value: 'interaction' in saved ? saved.interaction : 'drawtext', changed: 'interaction' in saved })], lobbies: 5 };
+      const usage = { path: 'telemetry', key: 'telemetry', group: '', groupIndex: 0, order: 2, type: 'choice', default: 'on', options: ['on', 'off'] };
+      const on = saved.telemetry !== 'off';
+      return { resource: res, lobbies: 5, settings: [Object.assign(row, { value: 'interaction' in saved ? saved.interaction : 'drawtext', changed: 'interaction' in saved }),
+        Object.assign(usage, { value: on ? 'on' : 'off', changed: 'telemetry' in saved })],
+        telemetry: { enabled: on, install: '3f9c0a12b4e7d681', sent: Date.now() - 2 * 3600e3, next: Date.now() + 4 * 3600e3, rows: [
+          { res: 'tw-foodstand', tz: 'Europe/Berlin', path: 'burger.minutes', n: 95 },
+          { res: 'tw-foodstand', tz: 'Europe/Berlin', path: 'burger.shift_finish', n: 4 },
+          { res: 'tw-foodstand', tz: 'America/New_York', path: 'taco.shift_start', n: 2 },
+          { res: 'tw-lib', tz: 'Europe/Berlin', path: 'sessions', n: 12 }] } };
     }
     const general = [['jobCoolDownHours', 0, 1], ['MaxPlayersInLobby', 4, 2], ['jobLevelCheck', false, 3]]
       .map(([key, def, order]) => ({ path: 'Config.' + key, key, group: '', groupIndex: 0, order, default: def, type: typeof def }));
@@ -136,7 +144,7 @@
           groupKey: 'regionData', groupIndex: i + 1, order, default: def, type: 'number' }));
     });
     const settings = general.concat(regions).map(r => Object.assign(r, { value: r.path in saved ? saved[r.path] : r.default, changed: r.path in saved }));
-    return { resource: res, settings, lobbies: 2, regionStats: { 1: 21400, 2: 30000, 3: 36000, 4: 40900, 5: 57700 } };
+    return { resource: res, settings, lobbies: 2, tools: [{ id: 'items', label: 'Inventory items', desc: 'ox_inventory: 3 items missing', button: 'Install items' }], regionStats: { 1: 21400, 2: 30000, 3: 36000, 4: 40900, 5: 57700 } };
   }
 
   function reply(data) { setTimeout(() => Tw.api.receive(Object.assign({ jobs: JOBS, currency: '$', liveCount: 3 }, data)), 220); }
@@ -162,6 +170,7 @@
       await loadMenu();
       Tw.store.open = true;
       Tw.api.receive(Object.assign({ tab: 'overview', i18n, locale, jobs: JOBS, currency: '$', liveCount: 3 }, overview('7d')));
+      if (params.get('job')) { Tw.store.settingsJob = params.get('job'); }
       if (params.get('page')) { Tw.store.page = params.get('page'); }
     },
   };

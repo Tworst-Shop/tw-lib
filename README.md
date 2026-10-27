@@ -21,7 +21,7 @@ That is all. Framework, inventory, vehicle keys, fuel and clothing scripts are d
 shows what was found on start:
 
 ```
-[tw-lib] 1.1.0 | framework=qb | inventory=ox_inventory | keys=qs-vehiclekeys | fuel=LegacyFuel | clothing=illenium-appearance
+[tw-lib] 1.2.0 | framework=qb | inventory=ox_inventory | keys=qs-vehiclekeys | fuel=LegacyFuel | clothing=illenium-appearance
 ```
 
 ## Updating

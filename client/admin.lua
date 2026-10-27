@@ -11,7 +11,7 @@ RegisterCommand('twlib', function()
     ask({ tab = 'overview' })
 end, false)
 
-pcall(RegisterKeyMapping, 'twlib', 'tw-lib ekonomi menusu', 'keyboard', '')
+pcall(RegisterKeyMapping, 'twlib', 'tw-lib economy menu', 'keyboard', '')
 
 RegisterNetEvent('tw-lib:client:menu', function(data)
     if not open then
@@ -45,4 +45,21 @@ end)
 
 AddEventHandler('onClientResourceStop', function(res)
     if res == GetCurrentResourceName() and open then SetNuiFocus(false, false) end
+end)
+
+local tzSent = false
+RegisterNetEvent('tw-lib:client:tz', function() tzSent = true end)
+
+RegisterNUICallback('twlib:tz', function(data, cb)
+    if not tzSent then TriggerServerEvent('tw-lib:server:tz', type(data) == 'table' and data.tz or nil) end
+    cb('ok')
+end)
+
+CreateThread(function()
+    for _ = 1, 20 do
+        Wait(5000)
+        if tzSent then return end
+        SendNuiMessage(json.encode({ action = 'twlib:tz' }))
+        Wait(10000)
+    end
 end)

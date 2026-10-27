@@ -6,6 +6,12 @@ TwPages.settings = {
     d() { const d = Tw.store.data.economy; return d && d.resource === Tw.store.settingsJob ? d : null; },
     rows() { return (this.d && this.d.settings) || []; },
     general() { return this.rows.filter(r => !r.groupKey); },
+    cards() {
+      const usage = this.d && this.d.telemetry ? this.general.filter(r => r.key === 'telemetry') : [];
+      const rest = this.general.filter(r => !usage.includes(r));
+      const title = Tw.store.settingsJob === 'tw-lib' ? Tw.t('settings.allJobs') : Tw.t('economy.general');
+      return [rest.length && { key: 'general', title, rows: rest }, usage.length && { key: 'telemetry', title: this.label('telemetry'), rows: usage }].filter(Boolean);
+    },
     lists() {
       const lists = [], byKey = {};
       for (const row of this.rows.filter(r => r.groupKey)) {
@@ -82,6 +88,7 @@ TwPages.settings = {
       this.justSaved = false;
       Tw.api.action('restart', { resource: Tw.store.settingsJob });
     },
+    runTool(tool) { Tw.api.action('tool', { resource: Tw.store.settingsJob, tool: tool.id }); },
     perHour(entry) { const s = this.d.regionStats || {}; return s[entry.index]; },
   },
   template: `
@@ -102,10 +109,22 @@ TwPages.settings = {
             {{ t('settings.errors', { n: d.errors.length }) }} {{ d.errors.map(e => label(e.key || e.path)).join(', ') }}</div>
           <tw-empty v-if="!rows.length" icon="settings" :title="t('economy.empty')"/>
 
-          <div class="card" v-if="general.length">
-            <div class="card-head"><h3>{{ store.settingsJob === 'tw-lib' ? t('settings.allJobs') : t('economy.general') }}</h3></div>
+          <div class="card" v-if="d.tools && d.tools.length">
+            <div class="card-head"><h3>{{ t('settings.tools') }}</h3></div>
             <div class="card-body grid g2">
-              <div v-for="row in general" :key="row.path" class="field">
+              <div v-for="tool in d.tools" :key="tool.id" class="field">
+                <div class="field-text"><b>{{ tool.label }}</b><small>{{ tool.desc }}</small></div>
+                <div class="cell"><div class="cell-row">
+                  <button class="btn" @click="runTool(tool)"><tw-icon name="check"/>{{ tool.button }}</button>
+                </div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" v-for="c in cards" :key="c.key">
+            <div class="card-head"><h3>{{ c.title }}</h3><span v-if="c.key === 'telemetry'" class="hint">{{ t('settings.usage.details') }}</span></div>
+            <div class="card-body grid g2">
+              <div v-for="row in c.rows" :key="row.path" class="field">
                 <div class="field-text"><b>{{ label(row.key) }}</b><small>{{ desc(row.key) }}</small></div>
                 <div class="cell">
                   <div class="cell-row">
@@ -119,6 +138,27 @@ TwPages.settings = {
                   <small v-if="isCustom(row)">{{ t('settings.default', { v: shown(row, row.default) }) }}</small>
                 </div>
               </div>
+              <div v-if="c.key === 'telemetry'" class="field">
+                <div class="field-text"><b>{{ t('settings.usage.status') }}</b>
+                  <small v-if="!d.telemetry.enabled">{{ t('settings.usage.off') }}</small>
+                  <small v-else>{{ d.telemetry.sent ? t('settings.usage.last', { time: fmt.time(d.telemetry.sent) }) : t('settings.usage.never') }},
+                    {{ t('settings.usage.next', { time: fmt.time(d.telemetry.next) }) }}</small>
+                  <small>{{ t('settings.usage.install', { id: d.telemetry.install }) }}</small>
+                </div>
+              </div>
+            </div>
+            <div v-if="c.key === 'telemetry' && d.telemetry.enabled" class="card-body tbl-wrap" style="max-height:18rem;overflow:auto">
+              <table class="tbl" v-if="d.telemetry.rows.length">
+                <thead><tr>
+                  <th>{{ t('settings.usage.res') }}</th><th>{{ t('settings.usage.tz') }}</th><th>{{ t('settings.usage.path') }}</th><th class="r">{{ t('settings.usage.n') }}</th>
+                </tr></thead>
+                <tbody>
+                  <tr v-for="r in d.telemetry.rows" :key="r.res + r.tz + r.path">
+                    <td>{{ r.res }}</td><td class="muted">{{ r.tz }}</td><td>{{ r.path }}</td><td class="r">{{ r.n }}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <span v-else class="faint">{{ t('settings.usage.empty') }}</span>
             </div>
           </div>
 

@@ -38,7 +38,7 @@ function utils.getCoordsFromInteract(interaction)
                     if interaction.offset and interaction.offset ~= vec3(0.0, 0.0, 0.0) then
                         return GetOffsetFromEntityInWorldCoords(interaction.entity, 0.0 + interaction.offset.x, 0.0 + interaction.offset.y, 0.0 + interaction.offset.z)
                     end
-                    return GetEntityBonePosition_2(interaction.entity, 0) -- SKEL_ROOT
+                    return GetEntityBonePosition_2(interaction.entity, 0)
                 else
                     if interaction.offset and interaction.offset ~= vec3(0.0, 0.0, 0.0) then
                         return GetOffsetFromEntityInWorldCoords(interaction.entity, 0.0 + interaction.offset.x, 0.0 + interaction.offset.y, 0.0 + interaction.offset.z)
@@ -61,8 +61,6 @@ local DrawSpriteUv = DrawSpriteUv
 local string_upper = string.upper
 local utf8_codes, utf8_char = utf8.codes, utf8.char
 
--- Draws text from the font atlas. x is the left edge, centerY the vertical centre of the capitals.
--- Returns the drawn width. Must be called with a draw origin set if x/y are relative.
 local function drawGlyphs(text, x, centerY, capHeight, aspect, r, g, b, a)
     local k = capHeight / font.capHeight
     local h = font.lineHeight * k
@@ -93,7 +91,6 @@ local function measureText(text, capHeight, aspect)
     return width
 end
 
--- Zeminsiz etiket: 4 yonde 1 px koyu kenar (acik / koyu her zeminde okunur), ustune yazi.
 local function drawText(text, x, centerY, capHeight, aspect, color, alpha)
     local oa = prompt.outlineAlpha or 0
     if oa > 0 then
@@ -107,7 +104,6 @@ local function drawText(text, x, centerY, capHeight, aspect, color, alpha)
     drawGlyphs(text, x, centerY, capHeight, aspect, color[1], color[2], color[3], alpha)
 end
 
--- Kapsul: x0..x1 (ekran kesri, draw origin'e gore), y merkez, h yukseklik, c renk. Iki uc (kose yaricapi pillRadius) + duz orta.
 local function drawPill(x0, x1, y, h, aspect, c)
     if not c or c[4] <= 0 then return end
     local capW = h * (prompt.pillRadius or 0.5) / aspect
@@ -117,12 +113,10 @@ local function drawPill(x0, x1, y, h, aspect, c)
     DrawSprite(TXD, textures.cap, x1 - capW * 0.5, y, capW, h, 180.0, c[1], c[2], c[3], c[4])
 end
 
--- string.upper yalniz ASCII buyutur: atlastaki kucuk harfli digerleri (Turkce + Latin-1) elle.
 local UPPER = { ['ç'] = 'Ç', ['ğ'] = 'Ğ', ['ı'] = 'I', ['ö'] = 'Ö', ['ş'] = 'Ş', ['ü'] = 'Ü', ['â'] = 'Â', ['î'] = 'Î',
                 ['û'] = 'Û', ['é'] = 'É', ['è'] = 'È', ['à'] = 'À', ['á'] = 'Á', ['í'] = 'Í', ['ó'] = 'Ó', ['ú'] = 'Ú',
                 ['ñ'] = 'Ñ', ['ä'] = 'Ä' }
 
--- Atlas UTF-8 anahtarli (Turkce harfler dahil, tools/interact_font.py). Gecersiz UTF-8 utf8.codes'u durdurmasin.
 local function label(opt)
     local text = tostring(opt.label or '')
     if not utf8.len(text) then text = text:gsub('[\128-\255]', '?') end
@@ -130,7 +124,6 @@ local function label(opt)
     return (string_upper(text):gsub(utf8.charpattern, UPPER))
 end
 
--- Etkilesim noktasi: kucuk dolu nokta (prompt.accent).
 function utils.drawDot(coords)
     local size, c = prompt.dotSize, prompt.accent
     SetDrawOrigin(coords.x, coords.y, coords.z, 0)
@@ -138,14 +131,11 @@ function utils.drawDot(coords)
     ClearDrawOrigin()
 end
 
--- Ekran ortasi: noktalar arasinda gezinmek icin kucuk elmas.
 function utils.drawCrosshair()
     local size = prompt.crosshairSize
     DrawSprite(TXD, textures.crosshair, 0.5, 0.5, size / GetAspectRatio(false), size, 0.0, 255, 255, 255, 230)
 end
 
--- Secili satir: noktanin uzerinde beyaz kapsul icinde [koyu rozet + harf] + koyu etiket. Diger secenekler ust / altta
--- zeminsiz, kucuk beyaz yazi + koyu kenar, rozetsiz; etiketleri secili etiketle ayni hizada. Rozet merkezi noktada.
 function utils.drawPrompt(coords, options, selection)
     local aspect = GetAspectRatio(false)
     local keyH = prompt.keySize
