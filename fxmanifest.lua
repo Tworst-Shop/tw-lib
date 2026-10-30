@@ -5,7 +5,7 @@ lua54 'yes'
 name 'tw-lib'
 author 'tworst-script'
 description 'Tworst shared library: framework bridges and customer settings that survive updates'
-version '1.2.0'
+version '1.2.1'
 
 tw_lib_config 'config.lua'
 
@@ -50,6 +50,7 @@ files {
     'interact/client/*.lua',
     'interact/shared/*.lua',
     'interact/assets/prompt/*.png',
+    'interact/assets/text.html',
     'html/index.html',
     'html/css/*.css',
     'html/js/*.js',

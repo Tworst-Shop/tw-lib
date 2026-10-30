@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+@font-face { font-family: 'Gilroy'; font-weight: 600; src: url('../../html/job/font/Gilroy-SemiBold_0.ttf'); }
+html, body { margin: 0; width: 1536px; height: 768px; overflow: hidden; background: transparent; }
+div { position: absolute; left: 0; height: 48px; line-height: 48px; white-space: nowrap; transform-origin: 0 50%;
+      font: 600 32px 'Gilroy', 'Microsoft YaHei', 'Malgun Gothic', 'Yu Gothic', sans-serif; color: #fff; }
+</style>
+</head>
+<body>
+<script>
+const rows = [];
+for (let i = 0; i < 16; i++) {
+    const d = document.createElement('div');
+    d.style.top = i * 48 + 'px';
+    document.body.appendChild(d);
+    rows.push(d);
+}
+function fit(d) {
+    d.style.transform = '';
+    const sw = d.scrollWidth;
+    if (sw > d._w) d.style.transform = 'scaleX(' + d._w / sw + ')';
+}
+window.addEventListener('message', (e) => {
+    let m = e.data;
+    if (typeof m === 'string') { try { m = JSON.parse(m); } catch { return; } }
+    const d = m && Number.isInteger(m.row) && rows[m.row];
+    if (!d || typeof m.text !== 'string' || !(m.w > 0)) return;
+    if (d.textContent === m.text && d._w === m.w) return;
+    d.textContent = m.text;
+    d._w = m.w;
+    fit(d);
+    document.fonts.ready.then(() => fit(d));
+});
+</script>
+</body>
+</html>

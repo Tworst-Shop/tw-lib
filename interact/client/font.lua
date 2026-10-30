@@ -4,6 +4,7 @@ return {
     lineHeight = 54,
     ascent = 42,
     capHeight = 31,
+    size = 44,
     glyphs = {
         [' '] = { x = 4, y = 4, w = 0, xoff = -1, adv = 11.00 },
         ['!'] = { x = 8, y = 4, w = 13, xoff = -1, adv = 11.00 },
